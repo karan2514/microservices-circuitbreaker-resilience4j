@@ -2,10 +2,13 @@ package com.adam.userservice.service.Impl;
 
 import com.adam.userservice.UserRepository;
 import com.adam.userservice.exceptions.ResourceNotFoundException;
+import com.adam.userservice.external.services.HotelService;
+import com.adam.userservice.external.services.RatingService;
 import com.adam.userservice.model.Hotel;
 import com.adam.userservice.model.Rating;
 import com.adam.userservice.model.User;
 import com.adam.userservice.service.UserService;
+import com.netflix.discovery.converters.Auto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +25,10 @@ import java.util.stream.Collectors;
 @Service
 public class UserServiceImpl implements UserService {
 
+    @Autowired
+    private RatingService ratingService;
+    @Autowired
+    private HotelService hotelService;
     private static final Logger LOGGER = LoggerFactory.getLogger(UserServiceImpl.class);
 
     @Autowired
@@ -39,9 +46,9 @@ public class UserServiceImpl implements UserService {
         List<Rating> ratings = Arrays.stream(ratingOfUser).toList();
 
         List<Rating> ratingList = ratings.stream().map(rating -> {
-            ResponseEntity<Hotel> forEntity = restTemplate.getForEntity("http://HOTEL-SERVICE/hotels/" + rating.getHotelId(), Hotel.class);
-            Hotel hotel = forEntity.getBody();
-            LOGGER.info("response status code: {} ", forEntity.getStatusCode());
+            //ResponseEntity<Hotel> forEntity = restTemplate.getForEntity("http://HOTEL-SERVICE/hotels/" + rating.getHotelId(), Hotel.class);
+            Hotel hotel = hotelService.getHotel(rating.getHotelId());
+           // LOGGER.info("response status code: {} ", forEntity.getStatusCode());
             rating.setHotel(hotel);
             return rating;
         }).collect(Collectors.toList());
@@ -59,7 +66,7 @@ public class UserServiceImpl implements UserService {
 
         //LOGGER.info("{}",ratingOfUser);
       for (User users: userList){
-          ArrayList<Rating> ratingOfUser = restTemplate.getForObject("http://localhost:8083/ratings/users/"+ users.getUserId(), ArrayList.class);
+          ArrayList<Rating> ratingOfUser = restTemplate.getForObject("http://RATING-SERVICE/ratings/users/"+ users.getUserId(), ArrayList.class);
 
           users.setRatings(ratingOfUser);
       }
@@ -73,4 +80,12 @@ public class UserServiceImpl implements UserService {
         user.setUserId(userId);
         return userRepository.save(user);
     }
+
+   /* @Override
+    public Rating createRating(Rating rating) {
+        String ratingId = UUID.randomUUID().toString();
+        rating.setRatingId(ratingId);
+
+        return ratingService.createRating(rating);
+    }*/
 }

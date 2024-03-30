@@ -1,5 +1,7 @@
 package com.adam.userservice.controller;
 
+import com.adam.userservice.external.services.RatingService;
+import com.adam.userservice.model.Rating;
 import com.adam.userservice.model.User;
 import com.adam.userservice.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +14,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/users")
 public class UserController {
-
+    @Autowired
+    private RatingService ratingService;
     @Autowired
     private UserService userService;
 
@@ -33,4 +36,9 @@ public class UserController {
         List<User> allUsers = userService.getAllUser();
         return ResponseEntity.ok(allUsers);
     }
+
+    /*@PostMapping("/user/rating")
+    public Rating createRatingFromUser(@RequestBody Rating rating){
+        return ratingService.createRating(rating);
+    }*/
 }

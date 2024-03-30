@@ -35,4 +35,9 @@ public class RatingController {
     public ResponseEntity<List<Rating>> getRatingsByHotel(@PathVariable String hotelId){
         return ResponseEntity.ok(ratingService.getRatingByHotelId(hotelId));
     }
+
+   /* @PostMapping("/user/rating")
+    public ResponseEntity<Rating> createRatingFromUser(@RequestBody Rating rating){
+        return ResponseEntity.ok(rating);
+    }*/
 }
