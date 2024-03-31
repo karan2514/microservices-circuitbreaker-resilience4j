@@ -4,6 +4,9 @@ import com.adam.userservice.external.services.RatingService;
 import com.adam.userservice.model.Rating;
 import com.adam.userservice.model.User;
 import com.adam.userservice.service.UserService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +22,8 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserController.class);
+
     @PostMapping
     public ResponseEntity<User> saveUser(@RequestBody User user){
         User savedUser = userService.saveUser(user);
@@ -26,9 +31,21 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
+    @CircuitBreaker(name = "ratingHotelBreaker" , fallbackMethod = "ratingHotelFallback")
     public ResponseEntity<User> getUserById(@PathVariable(name = "userId") String userId){
        User user = userService.getUser(userId);
         return ResponseEntity.ok(user);
+    }
+
+    public ResponseEntity<User> ratingHotelFallback(String userId, Exception ex){
+        LOGGER.info("Fallback method executed because Rating service is down",ex.getMessage());
+        User user = User.builder()
+                .userId("1234")
+                .email("dummyuser@yopmail.com")
+                .name("dummy")
+                .about("this dummy user is created because some service is down")
+                .build();
+        return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
     @GetMapping
